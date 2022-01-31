@@ -113,8 +113,8 @@ build-integration-test: $(all_generated_code) ## Ensure integration tests compil
 	go build -tags integration -o ./eksctl-integration-test ./integration/main.go
 
 .PHONY: integration-test
-integration-test: build build-integration-test ## Run the integration tests (with cluster creation and cleanup)
-	JUNIT_REPORT_DIR=$(git_toplevel)/test-results ./eksctl-integration-test $(INTEGRATION_TEST_ARGS)
+integration-test:
+	echo "welcome to the empty-int branch"
 
 TEST_CLUSTER ?= integration-test-dev
 .PHONY: integration-test-dev
