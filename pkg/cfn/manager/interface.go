@@ -28,6 +28,13 @@ type UpdateStackOptions struct {
 	Wait          bool
 }
 
+// DeleteStackOptions contains options for deleting a stack.
+type DeleteStackOptions struct {
+	Stack *Stack
+	Wait  bool
+	ErrCh chan error
+}
+
 // GetNodegroupOption nodegroup options.
 type GetNodegroupOption struct {
 	Stack         *NodeGroupStack
@@ -41,9 +48,7 @@ var _ StackManager = &StackCollection{}
 type StackManager interface {
 	AppendNewClusterStackResource(ctx context.Context, extendForOutposts, plan bool) (bool, error)
 	CreateStack(ctx context.Context, name string, stack builder.ResourceSetReader, tags, parameters map[string]string, errs chan error) error
-	DeleteStackBySpec(ctx context.Context, s *Stack) (*Stack, error)
-	DeleteStackBySpecSync(ctx context.Context, s *Stack, errs chan error) error
-	DeleteStackSync(ctx context.Context, s *Stack) error
+	DeleteStack(ctx context.Context, options DeleteStackOptions) error
 	DeleteTasksForDeprecatedStacks(ctx context.Context) (*tasks.TaskTree, error)
 	DescribeClusterStackIfExists(ctx context.Context) (*Stack, error)
 	DescribeClusterStack(ctx context.Context) (*Stack, error)
@@ -89,7 +94,7 @@ type StackManager interface {
 	NewTasksToCreateIAMServiceAccounts(serviceAccounts []*v1alpha5.ClusterIAMServiceAccount, oidc *iamoidc.OpenIDConnectManager, clientSetGetter kubernetes.ClientSetGetter) *tasks.TaskTree
 	NewTasksToDeleteClusterWithNodeGroups(ctx context.Context, clusterStack *Stack, nodeGroupStacks []NodeGroupStack, clusterOperable bool, newOIDCManager NewOIDCManager, cluster *ekstypes.Cluster, clientSetGetter kubernetes.ClientSetGetter, wait, force bool, cleanup func(chan error, string) error) (*tasks.TaskTree, error)
 	NewTasksToDeleteIAMServiceAccounts(ctx context.Context, serviceAccounts []string, clientSetGetter kubernetes.ClientSetGetter, wait bool) (*tasks.TaskTree, error)
-	NewTasksToDeleteNodeGroups(stacks []NodeGroupStack, shouldDelete func(_ string) bool, wait bool, cleanup func(chan error, string) error) (*tasks.TaskTree, error)
+	NewTasksToDeleteNodeGroups(ctx context.Context, stacks []NodeGroupStack, shouldDelete func(_ string) bool, wait bool, cleanup func(chan error, string) error) (*tasks.TaskTree, error)
 	NewTasksToDeleteOIDCProviderWithIAMServiceAccounts(ctx context.Context, newOIDCManager NewOIDCManager, cluster *ekstypes.Cluster, clientSetGetter kubernetes.ClientSetGetter, force bool) (*tasks.TaskTree, error)
 	NewUnmanagedNodeGroupTask(ctx context.Context, nodeGroups []*v1alpha5.NodeGroup, forceAddCNIPolicy bool, importer vpc.Importer) *tasks.TaskTree
 	PropagateManagedNodeGroupTagsToASG(ngName string, ngTags map[string]string, asgNames []string, errCh chan error) error
